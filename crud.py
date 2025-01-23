@@ -26,6 +26,15 @@ class UsuarioFerias(Base):
         lazy='subquery'
     )
 
+    def __repr__(self):
+        return f'Usuario({self.id=}, {self.nome=})'
+
+    def define_senha(self, senha):
+        self.senha = generate_password_hash(senha)
+
+    def verifica_senha(self, senha):
+        return check_password_hash(self.senha, senha)
+
 class EventosFerias(Base):
     __tablename__ = 'eventos_ferias'
 
@@ -36,18 +45,6 @@ class EventosFerias(Base):
     fim_ferias: Mapped[str] = mapped_column(String(30))
     total_dias: Mapped[int] = mapped_column(Integer())
 
-
-
-
-
-    def __repr__(self):
-        return f'Usuário({self.id=}, {self.nome=})'
-
-    def define_senha(self, senha):
-        self.senha = generate_password_hash(senha)
-
-    def verifica_senha(self, senha):
-        return check_password_hash(self.senha, senha)
 
 engine = create_engine(f'sqlite:///{PATH_TO_BD}')
 Base.metadata.create_all(bind=engine)
@@ -72,14 +69,14 @@ def cria_usuarios(
         session.commit()
 def ler_todos_usuarios():
     with Session(bind=engine) as session:
-        comando_sql = select(Usuario)
+        comando_sql = select(UsuarioFerias)
         usuarios = session.execute(comando_sql).fetchall()
         usuarios = [user[0] for user in usuarios]
         return usuarios
 
 def ler_usuario_por_id(id):
     with Session(bind=engine) as session:
-        comando_sql = select(Usuario).filter_by(id = id)
+        comando_sql = select(UsuarioFerias).filter_by(id = id)
         usuario = session.execute(comando_sql).fetchall()
         return usuario[0][0]
 
@@ -87,7 +84,7 @@ def modifica_usuario(
         id,
         **kwargs):
     with Session(bind=engine) as session:
-        comando_sql = select(Usuario).filter_by(id = id)
+        comando_sql = select(UsuarioFerias).filter_by(id = id)
         usuarios = session.execute(comando_sql).fetchall()
         for usuario in usuarios:
             for key, value in kwargs.items():
@@ -100,7 +97,7 @@ def modifica_usuario(
 
 def deleta_usuario(id):
     with Session(bind=engine) as session:
-        comando_sql = select(Usuario).filter_by(id = id)
+        comando_sql = select(UsuarioFerias).filter_by(id = id)
         usuarios = session.execute(comando_sql).fetchall()
         for usuario in usuarios:
             session.delete(usuario[0])
@@ -112,9 +109,17 @@ if __name__ == '__main__':
     cria_usuarios(
         'Anna Maria',
         senha= 'annamaria',
-        email = 'anna@gmail.com',
-        #acesso_gestor= False
+        email = 'annao@gmail.com',
+        # acesso_gestor= True,
+        inicio_na_empresa = '2023-01-01'
     )
+    # cria_usuarios(
+    #     'Ryan Moraes',
+    #     senha= 'ryanzinho',
+    #     email = 'ryan@gmail.com',
+    #     acesso_gestor= True,
+    #     inicio_na_empresa = '2023-01-01'
+    # )
 
     # usuarios = ler_todos_usuarios()
     #
