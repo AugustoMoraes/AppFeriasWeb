@@ -1,8 +1,17 @@
+import json
 from time import sleep
 import streamlit as st
 import pandas as pd
+from streamlit_calendar import calendar
 
 from crud import ler_todos_usuarios, cria_usuarios, modifica_usuario, deleta_usuario
+
+
+def limpa_datas():
+    del st.session_state['data_inicio']
+    del st.session_state['data_final']
+# def adicionar_ferias(usuario, inicio_ferias, fim_ferias):
+#     usuario.adiciona_ferias(inicio_ferias, fim_ferias)
 
 def login():
     usuarios = ler_todos_usuarios()
@@ -28,7 +37,7 @@ def login():
                 st.rerun() #sair da tela de login e ir pra outra tela
             else:
                 st.error('Senha incorreta')
-def pagina_calendario():
+def pagina_principal():
     st.title('Bem-Vindo ao AppFerias')
     st.divider()
 
@@ -49,7 +58,55 @@ def pagina_calendario():
         with st.sidebar:
             tab_gestao_usuarios()
     else:
-        st.markdown('Calendário')
+        pagina_calendario()
+
+def pagina_calendario():
+
+
+    with open('calendar_options.json') as f:
+        calendar_options = json.load(f)
+
+    usuarios = ler_todos_usuarios()
+    calendar_events = []
+    for usuario in usuarios:
+        calendar_events.extend(usuario.lista_ferias())
+
+    usuario = st.session_state['usuario']
+
+    if not 'ultimo_clique' in st.session_state:
+        st.session_state['ultimo_clique'] = 'ultimo_clique'
+
+
+    calendar_widget = calendar(events=calendar_events, options=calendar_options)
+
+    if 'callback' in calendar_widget and calendar_widget['callback'] == 'dateClick':
+
+        row_date = calendar_widget['dateClick']['date']
+        if row_date != st.session_state['ultimo_clique']:
+            st.session_state['ultimo_clique'] = row_date
+
+            date = calendar_widget['dateClick']['date'].split('T')[0]
+            st.write(date)
+            if not 'data_inicio' in st.session_state:
+                st.session_state['data_inicio'] = date
+                st.warning(f'Data de início de férias solicitada {date}')
+            else:
+                st.session_state['data_final'] = date
+                data_inicio = st.session_state['data_inicio']
+                cols = st.columns([0.7, 0.3])
+                with cols[0]:
+                    st.warning(f'Data de início de férias solicitada {data_inicio}')
+                with cols[1]:
+                    st.button('Limpar', use_container_width=True, on_click=limpa_datas())
+                cols = st.columns([0.7, 0.3])
+                with cols[0]:
+                    st.warning(f'Data final de férias solicitada {date}')
+                with cols[1]:
+                    st.button('Adicionar Férias',
+                              use_container_width=True,
+                              on_click=usuario.adiciona_ferias,
+                              args=(data_inicio, date)
+                              )
 
 def tab_gestao_usuarios():
     tab_vis, tab_cria, tab_mod, tab_del = st.tabs(
@@ -151,7 +208,7 @@ def main():
     if not st.session_state['logado']:
         login()
     else:
-        pagina_calendario()
+        pagina_principal()
 
 if __name__ == '__main__':
     main()
