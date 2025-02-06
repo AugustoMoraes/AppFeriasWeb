@@ -37,6 +37,10 @@ def login():
                 st.rerun() #sair da tela de login e ir pra outra tela
             else:
                 st.error('Senha incorreta')
+def pagina_gestao():
+    st.markdown('Página Gestão de Usuários')
+    with st.sidebar:
+        tab_gestao_usuarios()
 def pagina_principal():
     st.title('Bem-Vindo ao AppFerias')
     st.divider()
@@ -54,9 +58,7 @@ def pagina_principal():
                 st.session_state['pag_gestao_usuarios'] = False
                 st.rerun()
     if st.session_state['pag_gestao_usuarios']:
-        st.markdown('Página Gestão de Usuários')
-        with st.sidebar:
-            tab_gestao_usuarios()
+        pagina_gestao()
     else:
         pagina_calendario()
 
