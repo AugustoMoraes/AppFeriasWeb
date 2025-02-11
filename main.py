@@ -1,4 +1,5 @@
 import json
+from os import write
 from time import sleep
 import streamlit as st
 import pandas as pd
@@ -10,8 +11,6 @@ from crud import ler_todos_usuarios, cria_usuarios, modifica_usuario, deleta_usu
 def limpa_datas():
     del st.session_state['data_inicio']
     del st.session_state['data_final']
-# def adicionar_ferias(usuario, inicio_ferias, fim_ferias):
-#     usuario.adiciona_ferias(inicio_ferias, fim_ferias)
 
 def login():
     usuarios = ler_todos_usuarios()
@@ -37,10 +36,29 @@ def login():
                 st.rerun() #sair da tela de login e ir pra outra tela
             else:
                 st.error('Senha incorreta')
+
 def pagina_gestao():
-    st.markdown('Página Gestão de Usuários')
-    with st.sidebar:
-        tab_gestao_usuarios()
+    # st.markdown('Página Gestão de Usuários')
+
+    usuarios = ler_todos_usuarios()
+
+    for usuario in usuarios:
+        with st.container(border=True):
+            cols = st.columns(2)
+            dias_para_solicitar = usuario.dias_para_solicitar()
+            with cols[0]:
+                if dias_para_solicitar > 40:
+                    st.error(f'### {usuario.nome}')
+                else:
+                    st.markdown(f'### {usuario.nome}')
+            with cols[1]:
+                if dias_para_solicitar > 40:
+                    st.error(f'#### Dias para tirar {dias_para_solicitar}')
+                else:
+                    st.markdown(f'#### Dias para tirar {dias_para_solicitar}')
+
+
+
 def pagina_principal():
     st.title('Bem-Vindo ao AppFerias')
     st.divider()
@@ -59,6 +77,9 @@ def pagina_principal():
                 st.rerun()
     if st.session_state['pag_gestao_usuarios']:
         pagina_gestao()
+        with st.sidebar:
+            tab_gestao_usuarios()
+
     else:
         pagina_calendario()
 
@@ -75,6 +96,9 @@ def pagina_calendario():
 
     usuario = st.session_state['usuario']
 
+    with st.expander('Dias para solicitar'):
+        dias_para_solicitar = usuario.dias_para_solicitar()
+        st.markdown(f'O usuário {usuario.nome} possui **{dias_para_solicitar}** dias para solicitar')
     if not 'ultimo_clique' in st.session_state:
         st.session_state['ultimo_clique'] = 'ultimo_clique'
 
