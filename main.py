@@ -57,8 +57,6 @@ def pagina_gestao():
                 else:
                     st.markdown(f'#### Dias para tirar {dias_para_solicitar}')
 
-
-
 def pagina_principal():
     st.title('Bem-Vindo ao AppFerias')
     st.divider()
